@@ -5,8 +5,6 @@ import { INJECT_MESSAGE, type InjectResponse } from '../../shared/types/injectio
 import { filterPrompts, sortPrompts } from './prompts.filter';
 import {
   buildSnapshot,
-  buildSnapshotFromFiles,
-  chooseLibraryFiles,
   chooseLibraryFolder,
   ensureReadPermission,
   supportsDirectoryPicker,
@@ -70,16 +68,15 @@ export function usePrompts() {
     setStatus(capped ? 'Some prompts were skipped (scan limit).' : null);
   }, []);
 
+  const openPickerTab = useCallback(async () => {
+    await browser.tabs.create({ url: browser.runtime.getURL('/picker.html') });
+  }, []);
+
   const chooseFolder = useCallback(async () => {
     setStatus(null);
     try {
       if (!supportsDirectoryPicker()) {
-        const picked = await chooseLibraryFiles();
-        if (!picked) return;
-        const { snapshot: next, capped } = await buildSnapshotFromFiles(picked);
-        await saveSnapshot(next);
-        setSnapshot(next);
-        setStatus(capped ? 'Some prompts were skipped (scan limit).' : null);
+        await openPickerTab();
         return;
       }
 
@@ -89,7 +86,7 @@ export function usePrompts() {
     } catch {
       setStatus('Could not open that folder.');
     }
-  }, [persist]);
+  }, [openPickerTab, persist]);
 
   const reload = useCallback(async () => {
     setStatus(null);

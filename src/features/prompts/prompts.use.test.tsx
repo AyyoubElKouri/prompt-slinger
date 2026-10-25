@@ -10,9 +10,8 @@ const mocks = vi.hoisted(() => ({
   saveLibraryHandle: vi.fn(),
   buildSnapshot: vi.fn(),
   chooseLibraryFolder: vi.fn(),
-  chooseLibraryFiles: vi.fn(),
-  buildSnapshotFromFiles: vi.fn(),
   supportsDirectoryPicker: vi.fn(),
+  createTab: vi.fn(),
   ensureReadPermission: vi.fn(),
   queryTabs: vi.fn(),
   sendMessage: vi.fn(),
@@ -23,6 +22,10 @@ vi.mock('wxt/browser', () => ({
     tabs: {
       query: mocks.queryTabs,
       sendMessage: mocks.sendMessage,
+      create: mocks.createTab,
+    },
+    runtime: {
+      getURL: (path: string) => `chrome-extension://test${path}`,
     },
   },
 }));
@@ -36,9 +39,7 @@ vi.mock('./prompts.storage', () => ({
 
 vi.mock('./prompts.files', () => ({
   buildSnapshot: mocks.buildSnapshot,
-  buildSnapshotFromFiles: mocks.buildSnapshotFromFiles,
   chooseLibraryFolder: mocks.chooseLibraryFolder,
-  chooseLibraryFiles: mocks.chooseLibraryFiles,
   supportsDirectoryPicker: mocks.supportsDirectoryPicker,
   ensureReadPermission: mocks.ensureReadPermission,
 }));
@@ -66,8 +67,8 @@ beforeEach(() => {
   mocks.loadSnapshot.mockResolvedValue(snapshot);
   mocks.loadLibraryHandle.mockResolvedValue(null);
   mocks.chooseLibraryFolder.mockResolvedValue(null);
-  mocks.chooseLibraryFiles.mockResolvedValue(null);
   mocks.supportsDirectoryPicker.mockReturnValue(true);
+  mocks.createTab.mockResolvedValue({});
   mocks.ensureReadPermission.mockResolvedValue(true);
 });
 
@@ -127,10 +128,8 @@ describe('usePrompts', () => {
     close.mockRestore();
   });
 
-  it('falls back to the directory input when the picker API is unavailable', async () => {
+  it('opens the picker tab when the picker API is unavailable', async () => {
     mocks.supportsDirectoryPicker.mockReturnValue(false);
-    mocks.chooseLibraryFiles.mockResolvedValue({ folderName: 'Shelf', files: [] });
-    mocks.buildSnapshotFromFiles.mockResolvedValue({ snapshot, capped: false });
     const { result } = await loadedHook();
 
     await act(async () => {
@@ -138,21 +137,22 @@ describe('usePrompts', () => {
     });
 
     expect(mocks.chooseLibraryFolder).not.toHaveBeenCalled();
-    expect(mocks.saveSnapshot).toHaveBeenCalledWith(snapshot);
-    expect(result.current.title).toBe('Shelf');
+    expect(mocks.createTab).toHaveBeenCalledWith({
+      url: 'chrome-extension://test/picker.html',
+    });
   });
 
-  it('reopens the directory input on reload when the picker API is unavailable', async () => {
+  it('opens the picker tab on reload when the picker API is unavailable', async () => {
     mocks.supportsDirectoryPicker.mockReturnValue(false);
-    mocks.chooseLibraryFiles.mockResolvedValue({ folderName: 'Shelf', files: [] });
-    mocks.buildSnapshotFromFiles.mockResolvedValue({ snapshot, capped: false });
     const { result } = await loadedHook();
 
     await act(async () => {
       await result.current.onReload();
     });
 
-    expect(mocks.chooseLibraryFiles).toHaveBeenCalledTimes(1);
+    expect(mocks.createTab).toHaveBeenCalledWith({
+      url: 'chrome-extension://test/picker.html',
+    });
     expect(mocks.buildSnapshot).not.toHaveBeenCalled();
   });
 

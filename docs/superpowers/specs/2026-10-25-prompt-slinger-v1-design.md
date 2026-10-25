@@ -49,9 +49,10 @@ button opens the native directory picker.
 1. If the browser exposes `showDirectoryPicker`, it runs from the click
    gesture.
 2. Otherwise — including on extension pages where Chromium does not expose
-   the File System Access picker APIs — a hidden
-   `<input type="file" webkitdirectory multiple>` is opened. The folder name
-   comes from `webkitRelativePath`, and only `.md` files are kept.
+   the File System Access picker APIs — the popup opens `picker.html` in a
+   full extension tab. The tab opens a hidden
+   `<input type="file" webkitdirectory multiple>`, derives the folder name
+   from `webkitRelativePath`, and keeps only `.md` files.
 3. The folder is scanned recursively for `.md` files.
 4. The parsed prompts, folder name, and scan time are written to
    `chrome.storage.local`.
@@ -84,8 +85,8 @@ never prompts for permission on open. Rendering is immediate.
 4. On success, the folder is re-scanned and the snapshot replaced.
 5. On denial, deletion, or a missing handle, the stale snapshot remains visible
    with the status line `Folder unavailable — choose it again.`
-6. Without a directory handle (input fallback), Reload reopens the directory
-   input and replaces the snapshot after the user picks the folder again.
+6. Without a directory handle (input fallback), Reload opens `picker.html`
+   again and replaces the snapshot after the user picks the folder again.
 
 ## 4. Popup UI specification
 

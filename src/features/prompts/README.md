@@ -18,15 +18,22 @@ focused composer on any AI chat page.
 
 ## Data flow
 
-1. Choose folder → `showDirectoryPicker` when available, otherwise a
-   `webkitdirectory` file input → recursive `.md` scan.
+1. Choose folder → `showDirectoryPicker` when available, otherwise open the
+   `picker.html` extension tab with a `webkitdirectory` file input → recursive
+   `.md` scan.
 2. Parsed prompts + folder name → `chrome.storage.local`.
 3. Directory handle → IndexedDB (only when the browser exposes the picker).
 4. Popup opens from the snapshot only.
 5. Row click → `INJECT_PROMPT` message → content script inserts
    `body + "\n---\n"`, flashes, ACKs → popup closes.
-6. Reload re-scans via the saved handle, or reopens the directory input when
-   the picker API is unavailable.
+6. Reload re-scans via the saved handle, or reopens the picker tab when the
+   picker API is unavailable.
+
+## Picker tab
+
+`src/entrypoints/picker/` is a full extension tab. The folder dialog runs
+there, not in the popup, because invoking a native directory dialog from the
+popup can close the browser on some Chromium builds (observed in Brave).
 
 ## Invariants
 
