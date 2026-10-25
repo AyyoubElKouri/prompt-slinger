@@ -22,10 +22,13 @@ export function parsePrompt(raw: string, fileName: string, relativePath: string)
   }
 
   const rawName = data?.name;
+  const rawTitle = data?.title;
   const rawIcon = data?.['icon-name'];
   const fallbackName = fileName.replace(/\.md$/i, '');
-  const name = typeof rawName === 'string' && rawName.trim() ? rawName.trim() : fallbackName;
-  const iconName = typeof rawIcon === 'string' && rawIcon.trim() ? rawIcon.trim() : 'file-text';
+  const readText = (value: unknown) =>
+    typeof value === 'string' && value.trim() ? value.trim() : null;
+  const name = readText(rawName) ?? readText(rawTitle) ?? fallbackName;
+  const iconName = readText(rawIcon) ?? 'file-text';
 
   return {
     id: relativePath,

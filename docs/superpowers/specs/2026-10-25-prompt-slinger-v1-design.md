@@ -18,7 +18,7 @@ folder, never sends prompt content anywhere, and has no backend.
 - One user-picked prompts folder, stored as a browser-side snapshot.
 - Recursive scan for `.md` files, displayed as one flat list.
 - Popup UI matching `public/design/Popup.html` exactly.
-- Frontmatter with `name` and `icon-name`; Lucide icon rendering.
+- Frontmatter with `name` (or `title`) and `icon-name`; Lucide icon rendering.
 - Live search over prompt name and filename.
 - Click-to-inject into the focused chat input on any site.
 - Injection feedback flash and automatic popup close.
@@ -199,8 +199,8 @@ export type PromptSnapshot = {
 
 - A file starts with an optional YAML frontmatter block delimited by `---`
   lines. The block is parsed with the `yaml` package.
-- `name`: used when it is a non-empty string; otherwise the filename without
-  `.md`.
+- `name`: used when it is a non-empty string. Otherwise `title` is used, then
+  the filename without `.md`.
 - `icon-name`: used when it is a non-empty string; otherwise `file-text`.
 - `body`: everything after the closing delimiter, trimmed at both ends.
   Internal whitespace and line breaks are preserved.

@@ -14,6 +14,20 @@ describe('parsePrompt', () => {
     });
   });
 
+  it('uses title as the name when name is missing', () => {
+    const raw = '---\ntitle: Clean LLM Response\nicon-name: bot-message-square\n---\nBody';
+    expect(parsePrompt(raw, 'clean-llm-answers.md', 'clean-llm-answers.md')).toMatchObject({
+      name: 'Clean LLM Response',
+      iconName: 'bot-message-square',
+      body: 'Body',
+    });
+  });
+
+  it('prefers name over title when both are present', () => {
+    const raw = '---\nname: Primary\ntitle: Secondary\n---\nBody';
+    expect(parsePrompt(raw, 'both.md', 'both.md').name).toBe('Primary');
+  });
+
   it('falls back to the filename and file-text when fields are missing', () => {
     const raw = '---\ndescription: nope\n---\nBody';
     const prompt = parsePrompt(raw, 'fallback.md', 'fallback.md');
