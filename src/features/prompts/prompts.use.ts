@@ -79,6 +79,10 @@ export function usePrompts() {
     try {
       const handle = await loadLibraryHandle();
       if (!handle) {
+        if (snapshot) {
+          setStatus('Folder unavailable — choose it again.');
+          return;
+        }
         await chooseFolder();
         return;
       }
@@ -90,13 +94,21 @@ export function usePrompts() {
     } catch {
       setStatus('Folder unavailable — choose it again.');
     }
-  }, [chooseFolder, persist]);
+  }, [chooseFolder, persist, snapshot]);
 
   const inject = useCallback(async (prompt: Prompt) => {
     if (activeTimer.current) window.clearTimeout(activeTimer.current);
     setActiveId(prompt.id);
     activeTimer.current = window.setTimeout(() => setActiveId(null), 2200);
     setStatus(null);
+
+    const clearActive = () => {
+      if (activeTimer.current) {
+        window.clearTimeout(activeTimer.current);
+        activeTimer.current = null;
+      }
+      setActiveId(null);
+    };
 
     try {
       const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
@@ -113,12 +125,14 @@ export function usePrompts() {
       ]);
 
       if (!response.ok) {
+        clearActive();
         setStatus(response.error);
         return;
       }
 
       window.close();
     } catch {
+      clearActive();
       setStatus("Can't inject on this page.");
     }
   }, []);

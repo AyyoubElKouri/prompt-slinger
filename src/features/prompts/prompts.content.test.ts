@@ -81,7 +81,12 @@ describe('handleInjectRequest', () => {
     const rich = visible(document.createElement('div'));
     rich.setAttribute('contenteditable', 'true');
     rich.textContent = '';
+    const events: string[] = [];
+    rich.addEventListener('beforeinput', () => events.push('beforeinput'));
+    rich.addEventListener('input', () => events.push('input'));
     expect(handleInjectRequest(document, rich, 'Body')).toEqual({ ok: true });
     expect(rich.textContent).toBe('Body\n---\n');
+    expect(events).toContain('beforeinput');
+    expect(events).toContain('input');
   });
 });

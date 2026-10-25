@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MAX_PROMPTS, ensureReadPermission, scanDirectory } from './prompts.files';
+import { MAX_DEPTH, MAX_PROMPTS, ensureReadPermission, scanDirectory } from './prompts.files';
 
 function file(name: string, text: string): FileSystemFileHandle {
   return {
@@ -77,6 +77,16 @@ describe('scanDirectory', () => {
     );
     const result = await scanDirectory(directory('Big', files));
     expect(result.prompts).toHaveLength(MAX_PROMPTS);
+    expect(result.capped).toBe(true);
+  });
+
+  it('caps recursion at the maximum depth', async () => {
+    let node = directory('leaf', [file('too-deep.md', 'Deep')]);
+    for (let level = 0; level <= MAX_DEPTH; level += 1) {
+      node = directory(`level-${level}`, [node]);
+    }
+    const result = await scanDirectory(node);
+    expect(result.prompts).toHaveLength(0);
     expect(result.capped).toBe(true);
   });
 

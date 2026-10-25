@@ -48,3 +48,17 @@ describe('parsePrompt', () => {
     });
   });
 });
+
+describe('empty frontmatter', () => {
+  it('strips an empty frontmatter block', () => {
+    expect(parsePrompt('---\n---\nBody', 'empty.md', 'empty.md').body).toBe('Body');
+  });
+
+  it('strips a blank frontmatter block', () => {
+    expect(parsePrompt('---\n\n---\nBody', 'blank.md', 'blank.md').body).toBe('Body');
+  });
+
+  it('strips a comment-only frontmatter block', () => {
+    expect(parsePrompt('---\n# note\n---\nBody', 'comment.md', 'comment.md').body).toBe('Body');
+  });
+});

@@ -69,6 +69,10 @@
   outline: none;
 }
 
+.searchwrap {
+  border-bottom: 1px solid #4a4f3c;
+}
+
 .searchwrap:focus-within {
   border-bottom-color: #c9b77b;
 }

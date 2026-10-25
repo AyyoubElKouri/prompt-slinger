@@ -211,7 +211,6 @@ export function PromptsView({
               alignItems: 'center',
               gap: 10,
               height: 40,
-              borderBottom: '1px solid #4A4F3C',
             }}
           >
             <SearchIcon />

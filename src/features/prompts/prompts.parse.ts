@@ -1,7 +1,7 @@
 import { parse as parseYaml } from 'yaml';
 import type { Prompt } from '../../shared/types/prompt';
 
-const FRONTMATTER = /^(?:\uFEFF)?---[ \t]*\r?\n([\s\S]*?)\r?\n---[ \t]*(?:\r?\n|$)/;
+const FRONTMATTER = /^(?:\uFEFF)?---[ \t]*\r?\n(?:([\s\S]*?)\r?\n)?---[ \t]*(?:\r?\n|$)/;
 
 export function parsePrompt(raw: string, fileName: string, relativePath: string): Prompt {
   let data: Record<string, unknown> | null = null;
@@ -11,10 +11,11 @@ export function parsePrompt(raw: string, fileName: string, relativePath: string)
   if (match) {
     try {
       const parsed = parseYaml(match[1] ?? '') as unknown;
-      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-        data = parsed as Record<string, unknown>;
-        body = raw.slice(match[0].length);
-      }
+      data =
+        parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+          ? (parsed as Record<string, unknown>)
+          : null;
+      body = raw.slice(match[0].length);
     } catch {
       data = null;
     }
