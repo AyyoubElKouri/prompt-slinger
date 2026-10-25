@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { MAX_DEPTH, MAX_PROMPTS, ensureReadPermission, scanDirectory } from './prompts.files';
+import {
+  MAX_DEPTH,
+  MAX_PROMPTS,
+  buildSnapshotFromFiles,
+  ensureReadPermission,
+  scanDirectory,
+} from './prompts.files';
 
 function file(name: string, text: string): FileSystemFileHandle {
   return {
@@ -121,5 +127,44 @@ describe('ensureReadPermission', () => {
       requestPermission: async () => 'granted',
     } as unknown as FileSystemDirectoryHandle;
     expect(await ensureReadPermission(handle)).toBe(true);
+  });
+});
+
+
+function pickedFile(relativePath: string, text: string): File {
+  const name = relativePath.split('/').pop() ?? relativePath;
+  const file = new File([text], name, { type: 'text/markdown' });
+  Object.defineProperty(file, 'webkitRelativePath', { value: relativePath });
+  return file;
+}
+
+describe('buildSnapshotFromFiles', () => {
+  it('builds a snapshot from a directory input, dropping the root folder and hidden paths', async () => {
+    const result = await buildSnapshotFromFiles({
+      folderName: 'Shelf',
+      files: [
+        pickedFile('Shelf/root.md', '---\nname: Root\nicon-name: file-text\n---\nRoot body'),
+        pickedFile('Shelf/Writing/blog.md', '---\nname: Blog\nicon-name: pen-line\n---\nBlog body'),
+        pickedFile('Shelf/.private/secret.md', 'Secret'),
+        pickedFile('Shelf/notes.txt', 'Ignore'),
+      ],
+    });
+
+    expect(result.capped).toBe(false);
+    expect(result.snapshot.folderName).toBe('Shelf');
+    expect(result.snapshot.prompts.map((p) => p.relativePath).sort()).toEqual([
+      'Writing/blog.md',
+      'root.md',
+    ]);
+    expect(result.snapshot.prompts.find((p) => p.name === 'Blog')?.body).toBe('Blog body');
+  });
+
+  it('caps the number of files', async () => {
+    const files = Array.from({ length: MAX_PROMPTS + 1 }, (_, index) =>
+      pickedFile(`Shelf/p${index}.md`, `Prompt ${index}`),
+    );
+    const result = await buildSnapshotFromFiles({ folderName: 'Shelf', files });
+    expect(result.snapshot.prompts).toHaveLength(MAX_PROMPTS);
+    expect(result.capped).toBe(true);
   });
 });

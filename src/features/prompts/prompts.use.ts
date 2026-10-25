@@ -3,7 +3,14 @@ import { browser } from 'wxt/browser';
 import type { Prompt, PromptSnapshot } from '../../shared/types/prompt';
 import { INJECT_MESSAGE, type InjectResponse } from '../../shared/types/injection';
 import { filterPrompts, sortPrompts } from './prompts.filter';
-import { buildSnapshot, chooseLibraryFolder, ensureReadPermission } from './prompts.files';
+import {
+  buildSnapshot,
+  buildSnapshotFromFiles,
+  chooseLibraryFiles,
+  chooseLibraryFolder,
+  ensureReadPermission,
+  supportsDirectoryPicker,
+} from './prompts.files';
 import {
   loadLibraryHandle,
   loadSnapshot,
@@ -66,6 +73,16 @@ export function usePrompts() {
   const chooseFolder = useCallback(async () => {
     setStatus(null);
     try {
+      if (!supportsDirectoryPicker()) {
+        const picked = await chooseLibraryFiles();
+        if (!picked) return;
+        const { snapshot: next, capped } = await buildSnapshotFromFiles(picked);
+        await saveSnapshot(next);
+        setSnapshot(next);
+        setStatus(capped ? 'Some prompts were skipped (scan limit).' : null);
+        return;
+      }
+
       const handle = await chooseLibraryFolder();
       if (!handle) return;
       await persist(handle);
@@ -79,7 +96,7 @@ export function usePrompts() {
     try {
       const handle = await loadLibraryHandle();
       if (!handle) {
-        if (snapshot) {
+        if (snapshot && supportsDirectoryPicker()) {
           setStatus('Folder unavailable — choose it again.');
           return;
         }

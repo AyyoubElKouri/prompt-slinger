@@ -10,6 +10,9 @@ const mocks = vi.hoisted(() => ({
   saveLibraryHandle: vi.fn(),
   buildSnapshot: vi.fn(),
   chooseLibraryFolder: vi.fn(),
+  chooseLibraryFiles: vi.fn(),
+  buildSnapshotFromFiles: vi.fn(),
+  supportsDirectoryPicker: vi.fn(),
   ensureReadPermission: vi.fn(),
   queryTabs: vi.fn(),
   sendMessage: vi.fn(),
@@ -33,7 +36,10 @@ vi.mock('./prompts.storage', () => ({
 
 vi.mock('./prompts.files', () => ({
   buildSnapshot: mocks.buildSnapshot,
+  buildSnapshotFromFiles: mocks.buildSnapshotFromFiles,
   chooseLibraryFolder: mocks.chooseLibraryFolder,
+  chooseLibraryFiles: mocks.chooseLibraryFiles,
+  supportsDirectoryPicker: mocks.supportsDirectoryPicker,
   ensureReadPermission: mocks.ensureReadPermission,
 }));
 
@@ -60,6 +66,8 @@ beforeEach(() => {
   mocks.loadSnapshot.mockResolvedValue(snapshot);
   mocks.loadLibraryHandle.mockResolvedValue(null);
   mocks.chooseLibraryFolder.mockResolvedValue(null);
+  mocks.chooseLibraryFiles.mockResolvedValue(null);
+  mocks.supportsDirectoryPicker.mockReturnValue(true);
   mocks.ensureReadPermission.mockResolvedValue(true);
 });
 
@@ -117,6 +125,35 @@ describe('usePrompts', () => {
 
     expect(close).toHaveBeenCalledTimes(1);
     close.mockRestore();
+  });
+
+  it('falls back to the directory input when the picker API is unavailable', async () => {
+    mocks.supportsDirectoryPicker.mockReturnValue(false);
+    mocks.chooseLibraryFiles.mockResolvedValue({ folderName: 'Shelf', files: [] });
+    mocks.buildSnapshotFromFiles.mockResolvedValue({ snapshot, capped: false });
+    const { result } = await loadedHook();
+
+    await act(async () => {
+      await result.current.onChooseFolder();
+    });
+
+    expect(mocks.chooseLibraryFolder).not.toHaveBeenCalled();
+    expect(mocks.saveSnapshot).toHaveBeenCalledWith(snapshot);
+    expect(result.current.title).toBe('Shelf');
+  });
+
+  it('reopens the directory input on reload when the picker API is unavailable', async () => {
+    mocks.supportsDirectoryPicker.mockReturnValue(false);
+    mocks.chooseLibraryFiles.mockResolvedValue({ folderName: 'Shelf', files: [] });
+    mocks.buildSnapshotFromFiles.mockResolvedValue({ snapshot, capped: false });
+    const { result } = await loadedHook();
+
+    await act(async () => {
+      await result.current.onReload();
+    });
+
+    expect(mocks.chooseLibraryFiles).toHaveBeenCalledTimes(1);
+    expect(mocks.buildSnapshot).not.toHaveBeenCalled();
   });
 
   it('keeps the stale snapshot when permission is denied', async () => {
