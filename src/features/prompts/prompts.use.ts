@@ -3,13 +3,7 @@ import { browser } from 'wxt/browser';
 import type { Prompt, PromptSnapshot } from '../../shared/types/prompt';
 import { INJECT_MESSAGE, type InjectResponse } from '../../shared/types/injection';
 import { filterPrompts, sortPrompts } from './prompts.filter';
-import { buildSnapshot, ensureReadPermission } from './prompts.files';
-import {
-  loadLibraryHandle,
-  loadSnapshot,
-  saveLibraryHandle,
-  saveSnapshot,
-} from './prompts.storage';
+import { loadSnapshot } from './prompts.storage';
 
 export function usePrompts() {
   const [snapshot, setSnapshot] = useState<PromptSnapshot | null>(null);
@@ -55,14 +49,6 @@ export function usePrompts() {
           ? 'Nothing matches that.'
           : null;
 
-  const persist = useCallback(async (handle: FileSystemDirectoryHandle) => {
-    const { snapshot: next, capped } = await buildSnapshot(handle);
-    await saveLibraryHandle(handle);
-    await saveSnapshot(next);
-    setSnapshot(next);
-    setStatus(capped ? 'Some prompts were skipped (scan limit).' : null);
-  }, []);
-
   const openPickerTab = useCallback(async () => {
     await browser.tabs.create({ url: browser.runtime.getURL('/picker.html') });
   }, []);
@@ -78,24 +64,6 @@ export function usePrompts() {
       setStatus('Could not open that folder.');
     }
   }, [openPickerTab]);
-
-  const reload = useCallback(async () => {
-    setStatus(null);
-    try {
-      const handle = await loadLibraryHandle();
-      if (!handle) {
-        await chooseFolder();
-        return;
-      }
-      if (!(await ensureReadPermission(handle))) {
-        setStatus('Folder unavailable — choose it again.');
-        return;
-      }
-      await persist(handle);
-    } catch {
-      setStatus('Folder unavailable — choose it again.');
-    }
-  }, [chooseFolder, persist, snapshot]);
 
   const inject = useCallback(async (prompt: Prompt) => {
     if (activeTimer.current) window.clearTimeout(activeTimer.current);
@@ -147,7 +115,6 @@ export function usePrompts() {
     activeId,
     status,
     emptyMessage,
-    onReload: reload,
     onChooseFolder: chooseFolder,
     onInject: inject,
   };
