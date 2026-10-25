@@ -6,6 +6,7 @@ import type { PromptSnapshot } from '../../shared/types/prompt';
 const mocks = vi.hoisted(() => ({
   loadSnapshot: vi.fn(),
   createTab: vi.fn(),
+  executeScript: vi.fn(),
   queryTabs: vi.fn(),
   sendMessage: vi.fn(),
 }));
@@ -19,6 +20,9 @@ vi.mock('wxt/browser', () => ({
     },
     runtime: {
       getURL: (path: string) => `chrome-extension://test${path}`,
+    },
+    scripting: {
+      executeScript: mocks.executeScript,
     },
   },
 }));
@@ -49,6 +53,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   mocks.loadSnapshot.mockResolvedValue(snapshot);
   mocks.createTab.mockResolvedValue({});
+  mocks.executeScript.mockResolvedValue([]);
 });
 
 async function loadedHook() {
@@ -90,6 +95,26 @@ describe('usePrompts', () => {
       await result.current.onInject(snapshot.prompts[0]!);
     });
 
+    expect(close).toHaveBeenCalledTimes(1);
+    close.mockRestore();
+  });
+
+  it('reconnects to an open tab whose content script was orphaned', async () => {
+    const close = vi.spyOn(window, 'close').mockImplementation(() => undefined);
+    mocks.queryTabs.mockResolvedValue([{ id: 1 }]);
+    mocks.sendMessage
+      .mockRejectedValueOnce(new Error('Receiving end does not exist'))
+      .mockResolvedValueOnce({ ok: true });
+    const { result } = await loadedHook();
+
+    await act(async () => {
+      await result.current.onInject(snapshot.prompts[0]!);
+    });
+
+    expect(mocks.executeScript).toHaveBeenCalledWith({
+      target: { tabId: 1 },
+      files: ['/content-scripts/content.js'],
+    });
     expect(close).toHaveBeenCalledTimes(1);
     close.mockRestore();
   });

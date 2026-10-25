@@ -81,17 +81,32 @@ export function usePrompts() {
 
     try {
       const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
-      if (!tab?.id) throw new Error('No active tab');
+      const tabId = tab?.id;
+      if (!tabId) throw new Error('No active tab');
 
-      const response = await Promise.race<InjectResponse>([
-        browser.tabs.sendMessage(tab.id, {
-          type: INJECT_MESSAGE,
-          text: prompt.body,
-        }) as Promise<InjectResponse>,
-        new Promise<InjectResponse>((_resolve, reject) => {
-          setTimeout(() => reject(new Error('timeout')), 2000);
-        }),
-      ]);
+      const ask = () =>
+        Promise.race<InjectResponse>([
+          browser.tabs.sendMessage(tabId, {
+            type: INJECT_MESSAGE,
+            text: prompt.body,
+          }) as Promise<InjectResponse>,
+          new Promise<InjectResponse>((_resolve, reject) => {
+            setTimeout(() => reject(new Error('timeout')), 2000);
+          }),
+        ]);
+
+      let response: InjectResponse;
+      try {
+        response = await ask();
+      } catch {
+        // An extension reload orphans the content script in already-open tabs.
+        // Re-inject it once so the user does not need to refresh the page.
+        await browser.scripting.executeScript({
+          target: { tabId },
+          files: ['/content-scripts/content.js'],
+        });
+        response = await ask();
+      }
 
       if (!response.ok) {
         clearActive();

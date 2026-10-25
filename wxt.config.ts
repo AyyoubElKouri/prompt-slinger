@@ -8,7 +8,7 @@ export default defineConfig({
   srcDir: 'src',
 
   manifest: {
-    permissions: ['storage'],
+    permissions: ['storage', 'scripting'],
     host_permissions: ['<all_urls>'],
   },
 
