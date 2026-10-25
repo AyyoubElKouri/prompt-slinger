@@ -1,16 +1,11 @@
 @import "tailwindcss";
 
-html, body {
-  background: transparent;
+html,
+body,
+#root {
+  width: 404px;
+  height: 584px;
   margin: 0;
-}
-
-html {
-  border-radius: 16px;
   overflow: hidden;
-}
-
-body {
-  border-radius: 16px;
-  overflow: hidden;
+  background: #1d1f18;
 }

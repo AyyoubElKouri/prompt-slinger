@@ -1,0 +1,87 @@
+@font-face {
+  font-family: 'Gelica';
+  src: url('/fonts/gelica.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  min-height: 60px;
+  box-sizing: border-box;
+  padding: 0 22px;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid #353929;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+}
+
+.row:hover {
+  background: #1d1f18;
+}
+
+.row:focus-visible {
+  outline: 2px solid #c9b77b;
+  outline-offset: -2px;
+  background: #1d1f18;
+}
+
+.iconbtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: transparent;
+  border: 0;
+  color: #a3a692;
+  cursor: pointer;
+  border-radius: 2px;
+}
+
+.iconbtn:hover {
+  color: #e6e4d6;
+  background: #262922;
+}
+
+.iconbtn:focus-visible {
+  outline: 2px solid #c9b77b;
+  outline-offset: -2px;
+}
+
+.search::placeholder {
+  color: #8f937f;
+  font-style: normal;
+}
+
+.search:focus {
+  outline: none;
+}
+
+.searchwrap:focus-within {
+  border-bottom-color: #c9b77b;
+}
+
+.list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.list::-webkit-scrollbar-thumb {
+  background: #3a3e2f;
+  border-radius: 4px;
+}
+
+.list::-webkit-scrollbar-track {
+  background: transparent;
+}
