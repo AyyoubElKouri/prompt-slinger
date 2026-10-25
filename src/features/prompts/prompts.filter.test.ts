@@ -39,7 +39,7 @@ describe('filterPrompts', () => {
 
 describe('sortPrompts', () => {
   it('sorts by name and does not mutate the input', () => {
-    const input = [prompts[0], prompts[1]];
+    const input = [prompts[0]!, prompts[1]!];
     expect(sortPrompts(input).map((p) => p.name)).toEqual(['Code review', 'Weekly review']);
     expect(input.map((p) => p.name)).toEqual(['Weekly review', 'Code review']);
   });

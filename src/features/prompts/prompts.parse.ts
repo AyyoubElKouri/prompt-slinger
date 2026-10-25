@@ -10,7 +10,7 @@ export function parsePrompt(raw: string, fileName: string, relativePath: string)
 
   if (match) {
     try {
-      const parsed = parseYaml(match[1]) as unknown;
+      const parsed = parseYaml(match[1] ?? '') as unknown;
       if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
         data = parsed as Record<string, unknown>;
         body = raw.slice(match[0].length);
