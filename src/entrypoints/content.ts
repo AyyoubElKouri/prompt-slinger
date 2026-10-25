@@ -1,6 +1,9 @@
+import { startInjectionContentScript } from '../features/prompts/prompts.content';
+
 export default defineContentScript({
-  matches: ['*://*.google.com/*'],
+  matches: ['http://*/*', 'https://*/*'],
+  runAt: 'document_idle',
   main() {
-    console.log('Hello content.');
+    startInjectionContentScript();
   },
 });

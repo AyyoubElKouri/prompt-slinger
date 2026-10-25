@@ -5,7 +5,12 @@ export default defineConfig({
   modules: ['@wxt-dev/module-react'],
 
   entrypointsDir: 'entrypoints',
-  srcDir: "src",
+  srcDir: 'src',
+
+  manifest: {
+    permissions: ['storage'],
+    host_permissions: ['<all_urls>'],
+  },
 
   vite: () => ({
     plugins: [tailwindcss()],
