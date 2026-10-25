@@ -1,6 +1,7 @@
 import { useEffect, useRef, type CSSProperties } from 'react';
 import type { Prompt } from '../../shared/types/prompt';
 import { resolveIcon } from './prompts.icon';
+import { usePrompts } from './prompts.use';
 import './prompts.ui.css';
 
 const ACCENT = '#C9B77B';
@@ -323,4 +324,9 @@ export function PromptsView({
       </div>
     </div>
   );
+}
+
+export function PromptsPopup() {
+  const view = usePrompts();
+  return <PromptsView {...view} />;
 }
