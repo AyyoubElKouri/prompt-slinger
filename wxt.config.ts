@@ -4,7 +4,7 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
   modules: ['@wxt-dev/module-react'],
 
-  entrypointsDir: "src/entrypoints",
+  entrypointsDir: 'entrypoints',
   srcDir: "src",
 
   vite: () => ({
