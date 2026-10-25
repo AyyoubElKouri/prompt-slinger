@@ -3,12 +3,7 @@ import { browser } from 'wxt/browser';
 import type { Prompt, PromptSnapshot } from '../../shared/types/prompt';
 import { INJECT_MESSAGE, type InjectResponse } from '../../shared/types/injection';
 import { filterPrompts, sortPrompts } from './prompts.filter';
-import {
-  buildSnapshot,
-  chooseLibraryFolder,
-  ensureReadPermission,
-  supportsDirectoryPicker,
-} from './prompts.files';
+import { buildSnapshot, ensureReadPermission } from './prompts.files';
 import {
   loadLibraryHandle,
   loadSnapshot,
@@ -75,28 +70,20 @@ export function usePrompts() {
   const chooseFolder = useCallback(async () => {
     setStatus(null);
     try {
-      if (!supportsDirectoryPicker()) {
-        await openPickerTab();
-        return;
-      }
-
-      const handle = await chooseLibraryFolder();
-      if (!handle) return;
-      await persist(handle);
+      // Never call a native picker from the action popup: the popup is torn
+      // down when the dialog takes focus, which crashes Brave and loses the
+      // selection in Chrome. The picker tab is a normal page and is safe.
+      await openPickerTab();
     } catch {
       setStatus('Could not open that folder.');
     }
-  }, [openPickerTab, persist]);
+  }, [openPickerTab]);
 
   const reload = useCallback(async () => {
     setStatus(null);
     try {
       const handle = await loadLibraryHandle();
       if (!handle) {
-        if (snapshot && supportsDirectoryPicker()) {
-          setStatus('Folder unavailable — choose it again.');
-          return;
-        }
         await chooseFolder();
         return;
       }

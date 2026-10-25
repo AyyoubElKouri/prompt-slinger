@@ -9,8 +9,6 @@ const mocks = vi.hoisted(() => ({
   loadLibraryHandle: vi.fn(),
   saveLibraryHandle: vi.fn(),
   buildSnapshot: vi.fn(),
-  chooseLibraryFolder: vi.fn(),
-  supportsDirectoryPicker: vi.fn(),
   createTab: vi.fn(),
   ensureReadPermission: vi.fn(),
   queryTabs: vi.fn(),
@@ -39,8 +37,6 @@ vi.mock('./prompts.storage', () => ({
 
 vi.mock('./prompts.files', () => ({
   buildSnapshot: mocks.buildSnapshot,
-  chooseLibraryFolder: mocks.chooseLibraryFolder,
-  supportsDirectoryPicker: mocks.supportsDirectoryPicker,
   ensureReadPermission: mocks.ensureReadPermission,
 }));
 
@@ -66,8 +62,6 @@ beforeEach(() => {
   vi.clearAllMocks();
   mocks.loadSnapshot.mockResolvedValue(snapshot);
   mocks.loadLibraryHandle.mockResolvedValue(null);
-  mocks.chooseLibraryFolder.mockResolvedValue(null);
-  mocks.supportsDirectoryPicker.mockReturnValue(true);
   mocks.createTab.mockResolvedValue({});
   mocks.ensureReadPermission.mockResolvedValue(true);
 });
@@ -86,16 +80,17 @@ describe('usePrompts', () => {
     expect(mocks.loadLibraryHandle).not.toHaveBeenCalled();
   });
 
-  it('keeps the stale snapshot and shows the pinned status when the handle is missing', async () => {
+  it('reopens the picker tab on reload when the handle is missing', async () => {
     const { result } = await loadedHook();
 
     await act(async () => {
       await result.current.onReload();
     });
 
-    expect(result.current.status).toBe('Folder unavailable — choose it again.');
+    expect(mocks.createTab).toHaveBeenCalledWith({
+      url: 'chrome-extension://test/picker.html',
+    });
     expect(result.current.count).toBe(1);
-    expect(mocks.chooseLibraryFolder).not.toHaveBeenCalled();
   });
 
   it('stays open and reports a failed injection', async () => {
@@ -128,32 +123,16 @@ describe('usePrompts', () => {
     close.mockRestore();
   });
 
-  it('opens the picker tab when the picker API is unavailable', async () => {
-    mocks.supportsDirectoryPicker.mockReturnValue(false);
+  it('always opens the picker tab from the popup', async () => {
     const { result } = await loadedHook();
 
     await act(async () => {
       await result.current.onChooseFolder();
     });
 
-    expect(mocks.chooseLibraryFolder).not.toHaveBeenCalled();
     expect(mocks.createTab).toHaveBeenCalledWith({
       url: 'chrome-extension://test/picker.html',
     });
-  });
-
-  it('opens the picker tab on reload when the picker API is unavailable', async () => {
-    mocks.supportsDirectoryPicker.mockReturnValue(false);
-    const { result } = await loadedHook();
-
-    await act(async () => {
-      await result.current.onReload();
-    });
-
-    expect(mocks.createTab).toHaveBeenCalledWith({
-      url: 'chrome-extension://test/picker.html',
-    });
-    expect(mocks.buildSnapshot).not.toHaveBeenCalled();
   });
 
   it('keeps the stale snapshot when permission is denied', async () => {
